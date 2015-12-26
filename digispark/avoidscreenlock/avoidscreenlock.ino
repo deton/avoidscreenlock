@@ -1,6 +1,7 @@
-const int SENSORPIN = 23;
-const int LEDPIN = 13;
-const int OUTPIN = 22; // 他のマイコンにセンサ出力を伝える用途
+#include <DigiMouse.h>
+
+const int SENSORPIN = 2;
+const int LEDPIN = 1; // LED on Digispark Model A (rev2, rev4)
 // 最後にセンサの反応がなくなってからこの時間が過ぎたらLED消灯
 const uint32_t LEDTIMEOUT = 15000; // [ms]
 uint32_t now;
@@ -9,10 +10,8 @@ uint32_t lastMouse = 0;
 
 void setup()
 {
-    Serial.begin(9600);
-    Mouse.begin();
+    DigiMouse.begin();
     pinMode(LEDPIN, OUTPUT);
-    pinMode(OUTPIN, OUTPUT);
     pinMode(SENSORPIN, INPUT);
     lastMouse = millis();
 }
@@ -23,13 +22,10 @@ static void mouseLoop()
     const uint32_t PCLOCKMS = 540000; // 9 [min]
     if (now - lastMouse > PCLOCKMS) {
         if (now - lastActive > PCLOCKMS) { // away presence
-            Serial.print("A");
             return; // allow screen saver
         }
         lastMouse = now;
-        Mouse.move(1, 0, 0);
-        //Mouse.end();
-        Serial.print("M");
+        DigiMouse.moveX(1); // right 1
     }
 }
 
@@ -38,15 +34,14 @@ void loop()
     now = millis();
     boolean isActive = (digitalRead(SENSORPIN) == HIGH);
     if (isActive) {
-        digitalWrite(OUTPIN, HIGH);
-        digitalWrite(LEDPIN, HIGH);
+        //digitalWrite(LEDPIN, HIGH);
         lastActive = now;
-    } else {
-        digitalWrite(OUTPIN, LOW);
-        if (now - lastActive > LEDTIMEOUT) {
-            digitalWrite(LEDPIN, LOW);
-        }
+    } else if (now - lastActive > LEDTIMEOUT) {
+        digitalWrite(LEDPIN, LOW);
     }
     mouseLoop();
-    delay(10);
+    // XXX: 入力ありとみなされて(?)スクリーンセーバが動かなくなる。
+    // が、(DigiMouse.update()も)呼ばなかったら、moveX()しても効かなくなる
+    //DigiMouse.delay(50);
+    delay(50);
 }

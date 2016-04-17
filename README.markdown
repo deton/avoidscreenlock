@@ -33,12 +33,14 @@
 
 ## 関連
 + [PresenceStick](https://github.com/deton/presencestick)の画面ロック回避機能。
++ [感圧センサで離席検出してPCスクリーンロックするBLEデバイス](https://github.com/deton/ChairLeave)
 + BluetoothデバイスがPCから離れた時に自動ロック。
   Bluetooth 4.0のProximity Profile(PXP)。
   (Bluetoothデバイスを持ち歩く必要あり)
 	+ [ぶるタグ](http://pc.nikkeibp.co.jp/article/column/20120912/1062902/?P=2)
 	+ http://buffalo.jp/product/news/2012/09/05_04/
 	+ [Ubuntuで同様に](http://gihyo.jp/admin/serial/01/ubuntu-recipe/0267)
++ [WinSensorシリーズ（SENSOR-HM/ECO）](http://www.iodata.jp/product/lcd/option/sensor-hmeco/)。人感センサーで離席時に省電力モードに切替
 
 ## 備考
 Linux PCでも使いたかったのですが、

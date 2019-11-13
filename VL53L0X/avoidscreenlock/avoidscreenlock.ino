@@ -13,7 +13,7 @@ const int LEDPIN = 13;
 // PCスクリーンロック回避のために定期的にマウスを動かす
 Metro mouseTimer = Metro(540000); // 9 [min]
 // 離席かどうかのしきい値
-const uint16_t AWAYTHRESHOLD = 650; // [mm]
+const uint16_t AWAYTHRESHOLD = 600; // [mm]
 // マウスを動かす間隔の間で、連続3回以上の在席の検知があったか
 boolean wasActive = true;
 // 在席の検知が連続何回あったか
@@ -22,6 +22,9 @@ int16_t nactives = 0;
 void setup()
 {
     Serial.begin(9600);
+    // Teensy LC SDA1/SCL1
+    //Wire.setSDA(23);
+    //Wire.setSCL(22);
     Wire.begin();
     Mouse.begin();
     pinMode(LEDPIN, OUTPUT);
@@ -35,6 +38,7 @@ void setup()
     // increase timing budget to 200 ms
     sensor.setMeasurementTimingBudget(200000);
 #endif
+    Serial.println("starting");
 }
 
 void loop()

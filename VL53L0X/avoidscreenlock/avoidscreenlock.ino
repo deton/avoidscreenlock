@@ -4,14 +4,13 @@
 #include <VL53L0X.h>
 // https://github.com/SofaPirate/Chrono
 #include <Chrono.h>
+// http://www.forward.com.au/pfod/ArduinoProgramming/I2C_ClearBus/index.html
+#include "I2C_ClearBus.h"
 
 #define DEBUG 1
 
 VL53L0X sensor;
 boolean badSensor = false;
-
-// - higher accuracy at the cost of lower speed
-#define HIGH_ACCURACY
 
 const int LEDPIN = 13;
 // PCスクリーンロック回避のために定期的にマウスを動かす
@@ -23,33 +22,56 @@ boolean wasActive = true;
 // 在席の検知が連続何回あったか
 int16_t nactives = 0;
 
-void setup()
+bool clear_i2c()
 {
+    int rtn = I2C_ClearBus();
+    if (rtn != 0) {
 #if DEBUG
-    Serial.begin(9600);
+        Serial.println(F("I2C bus error. Could not clear"));
+        if (rtn == 1) {
+            Serial.println(F("SCL clock line held low"));
+        } else if (rtn == 2) {
+            Serial.println(F("SCL clock line held low by slave clock stretch"));
+        } else if (rtn == 3) {
+            Serial.println(F("SDA data line held low"));
+        }
 #endif
-    // Teensy LC SDA1/SCL1
-    //Wire.setSDA(23);
-    //Wire.setSCL(22);
-    Wire.begin();
-    Mouse.begin();
-    pinMode(LEDPIN, OUTPUT);
+        return false;
+    } else { // bus clear
+        // re-enable Wire
+        // now can start Wire Arduino master
+        Wire.begin();
+    }
+    return true;
+}
 
+bool reset_sensor()
+{
+    if (!clear_i2c()) {
+        return false;
+    }
     sensor.setTimeout(500);
     if (!sensor.init()) {
 #if DEBUG
         Serial.println("Failed to detect and initialize sensor!");
 #endif
+        return false;
+    }
+    sensor.startContinuous(1000);
+    return true;
+}
+
+void setup()
+{
+#if DEBUG
+    Serial.begin(9600);
+#endif
+    Mouse.begin();
+    pinMode(LEDPIN, OUTPUT);
+    if (!reset_sensor()) {
         badSensor = true;
         return;
     }
-#if defined HIGH_SPEED
-    // reduce timing budget to 20 ms (default is about 33 ms)
-    sensor.setMeasurementTimingBudget(20000);
-#elif defined HIGH_ACCURACY
-    // increase timing budget to 200 ms
-    sensor.setMeasurementTimingBudget(200000);
-#endif
 #if DEBUG
     Serial.println("starting");
 #endif
@@ -83,7 +105,7 @@ void loop()
 #endif
     }
 
-    uint16_t mm = sensor.readRangeSingleMillimeters();
+    uint16_t mm = sensor.readRangeContinuousMillimeters();
     if (!sensor.timeoutOccurred()) {
         boolean isActive = (mm < AWAYTHRESHOLD);
         if (isActive) {
@@ -104,5 +126,8 @@ void loop()
 #if DEBUG
         Serial.print("T");
 #endif
+        if (!reset_sensor()) {
+            badSensor = true;
+        }
     }
 }
